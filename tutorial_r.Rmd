@@ -1,0 +1,75 @@
+---
+title: "Tutorial R - Introdução a Manipulação de Dados"
+output: html_notebook
+---
+
+## Importando os dados e bibliotecas
+
+A biblioteca utilizada neste tutorial é a **tidyverse**. 
+
+```{r}
+# Instale o tidyverse executando a linha abaixo
+# install.packages("tidyverse")
+
+library(tidyverse)
+dados <- read_csv(here::here("data/train.csv"))
+
+dados$Age <- as.integer(dados$Age)
+dados %>% glimpse()
+```
+
+Breve descrição das informações disponíveis:
+
+ * Survived: Sobrevivente?	0 = Não, 1 = Sim;
+ * Pclass: Classe do bilhete: 1 = 1ª classe, 2 = 2ª classe, 3 = 3ª classe;
+ * Sex:	Sexo;	
+ * Age: Idade;	
+ * SibSp:	# de irmãos ou conjuges a bordo ;	
+ * Parch:	# pais e filhos a bordo;
+ * Ticket: Número do bilhete;
+ * Fare: taxa paga;
+ * Cabin: Número da cabine;
+ * Embarked: Porto de Embarque:	C = Cherbourg, Q = Queensotwn, S = Southampton;
+
+## Filtrando dados
+
+Filtrando os dados cujo sexo do passageiro seja feminino.
+
+```{r}
+filter(dados, Sex == "female")
+
+# Utilizando %>%
+
+dados %>% filter(Sex == "female")
+
+```
+
+## Ordenando dados
+
+Exibindo dados de acordo com a coluna **Fare** ordenada de forma crescente.
+
+```{r}
+dados %>% arrange(Fare)
+```
+
+## Selecionando colunas
+
+Utilizamos a função `select(df, c1, c2, ..., cn)` para selecionar as colunas desejadas c1, c2, ..., cn de um dataframe *df*
+
+```{r}
+select(dados, file_extension, users, the_year, -month_day)
+```
+
+## Criando colunas
+
+Criando uma coluna `FamSize`. Para criar uma coluna ou ate modificar uma coluna já existente, utilizamos a função `mutate(df, column = x)` no dataframe `df` com um valor x. 
+
+```{r}
+dados %>%
+  mutate(FamSize = SibSp + Parch) %>% 
+  arrange(-FamSize) 
+
+dados %>% 
+  mutate(Survived = ifelse(Survived == 0, "No", "Yes"))
+```
+
