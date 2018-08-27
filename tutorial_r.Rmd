@@ -12,7 +12,7 @@ A biblioteca utilizada neste tutorial é a **tidyverse**.
 # install.packages("tidyverse")
 
 library(tidyverse)
-dados <- read_csv(here::here("data/train.csv"))
+dados <- read_csv(here::here("data/titanic.csv"))
 
 dados$Age <- as.integer(dados$Age)
 dados %>% glimpse()
@@ -33,43 +33,106 @@ Breve descrição das informações disponíveis:
 
 ## Filtrando dados
 
-Filtrando os dados cujo sexo do passageiro seja feminino.
+Quais sobreviventes eram do sexo feminino?
 
 ```{r}
-filter(dados, Sex == "female")
-
-# Utilizando %>%
-
-dados %>% filter(Sex == "female")
-
+dados %>% filter(Survived == 1 & Sex == "female")
 ```
 
 ## Ordenando dados
 
-Exibindo dados de acordo com a coluna **Fare** ordenada de forma crescente.
+Exibindo os dados dos sobreviventes por ordem crescente de Fare:
 
 ```{r}
-dados %>% arrange(Fare)
+dados %>% filter(Survived == 1) %>%
+  arrange(Fare)
 ```
 
 ## Selecionando colunas
 
-Utilizamos a função `select(df, c1, c2, ..., cn)` para selecionar as colunas desejadas c1, c2, ..., cn de um dataframe *df*
-
+Só quero saber se sobreviveu ou não, a classe, o sexo e a idade
 ```{r}
-select(dados, file_extension, users, the_year, -month_day)
-```
+dados %>%
+  select(Survived, Pclass, Sex, Age) %>% na.omit()
+``` 
 
-## Criando colunas
+### Criando e modificando colunas
 
-Criando uma coluna `FamSize`. Para criar uma coluna ou ate modificar uma coluna já existente, utilizamos a função `mutate(df, column = x)` no dataframe `df` com um valor x. 
+* Modificar coluna Sex para F ou M;
+* Calcular tamanho da família;
+* Calcular número de sobreviventes por sexo e classe;
+* Calcular número de sobreviventes por Porto de Embarque
 
 ```{r}
 dados %>%
   mutate(FamSize = SibSp + Parch) %>% 
   arrange(-FamSize) 
-
+```
+```{r}
 dados %>% 
-  mutate(Survived = ifelse(Survived == 0, "No", "Yes"))
+  mutate(Sex = ifelse(Sex == "female", "F", "M"))
+
+```
+
+```{r}
+dados %>%
+  filter(Survived == 1) %>%
+  group_by(Pclass, Sex) %>%
+  summarise(n_survived = n()) %>%
+  arrange(-n_survived) %>% na.omit()
+```
+
+```{r}
+dados %>%
+  filter(Survived == 1) %>%
+  group_by(Embarked) %>%
+  summarise(num_survived = n()) %>%
+  arrange(-num_survived) %>% na.omit()
+```
+
+### Combinando linhas
+
+Sobreviventes com maior e menor Fare (taxa de pagamento);
+
+```{r}
+top_10 <- dados %>%
+  filter(Survived == 1) %>%
+  arrange(-Fare) %>% head(10)
+
+top_minus_10 <- dados %>%
+  filter(Survived == 1) %>%
+  arrange(Fare) %>% head(10)
+
+rbind(top_10, top_minus_10) %>% 
+  arrange(Fare)
+```
+
+## Criando algumas visualizações
+
+Distribuição de sobreviventes por Sexo e Classe
+
+```{r}
+dados %>% na.omit() %>%
+  group_by(Sex, Pclass) %>%
+  ggplot(aes(x = Pclass, fill=Sex)) +
+  geom_bar(position = "dodge")
+```
+
+Distribuição de Fare e Sobreviventes por Idade e Sexo
+
+```{r}
+dados %>% na.omit() %>%
+  mutate(Survived = ifelse(Survived == 1, "Yes", "No")) %>%
+  ggplot(aes(x = Age, y = Fare, color = Sex)) +
+  geom_point(alpha = .6) +
+  facet_grid(~Survived)
+
+```
+
+Existe alguma relação entre o Porto de Embarque do passageiro e sua sobrevivência?
+
+```{r}
+model <- lm(Survived ~ ., dados %>% select(-PassengerId, -Name, -Ticket)) 
+summary(model)
 ```
 
