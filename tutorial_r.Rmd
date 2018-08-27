@@ -11,8 +11,10 @@ A biblioteca utilizada neste tutorial é a **tidyverse**.
 # Instale o tidyverse executando a linha abaixo
 # install.packages("tidyverse")
 
+setwd("~/tutorial_r")
+
 library(tidyverse)
-dados <- read_csv(here::here("data/titanic.csv"))
+dados <- read_csv(("data/titanic.csv"))
 
 dados$Age <- as.integer(dados$Age)
 dados %>% glimpse()
@@ -105,6 +107,18 @@ top_minus_10 <- dados %>%
 
 rbind(top_10, top_minus_10) %>% 
   arrange(Fare)
+```
+
+Exibir o número de homens que sobreviveram ou não, de acordo com a maioridade (>= 18 anos)
+
+```{r}
+dados %>%
+  filter(Sex == "male") %>%
+  mutate(Survived = ifelse(Survived == 1, "Survived", "Not_Survived"),
+         Maior_Idade = ifelse(Age >= 18, 1, 0)) %>%
+  group_by(Survived, Maior_Idade) %>%
+  summarise(cont = n())  %>%
+  spread(key = Survived, value = cont)
 ```
 
 ## Criando algumas visualizações
